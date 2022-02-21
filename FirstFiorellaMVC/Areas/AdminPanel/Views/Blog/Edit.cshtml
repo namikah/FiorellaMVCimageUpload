@@ -40,11 +40,14 @@
 </div>
 
 @section Scripts{
-    <script src="https://cdn.ckeditor.com/ckeditor5/30.0.0/classic/ckeditor.js"></script>
+    
+    <partial name="_CKEditorPartial" />
+
+    <partial name="_ValidationPartial" />
 
     <script>
     ClassicEditor
-        .create( document.querySelector( '#edit-description-ck-editor' ) )
+        .create( document.querySelector( '#create-description-ck-editor' ) )
         .catch( error => {
             console.error( error );
         } );
