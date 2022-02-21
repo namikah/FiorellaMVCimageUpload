@@ -1,8 +1,10 @@
 ﻿using FirstFiorellaMVC.DataAccessLayer;
 using FirstFiorellaMVC.Models;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -13,9 +15,12 @@ namespace FirstFiorellaMVC.Areas.AdminPanel.Controllers
     {
         private readonly AppDbContext _dbContext;
 
-        public BlogController(AppDbContext dbContext)
+        private readonly IWebHostEnvironment _webHostEnvironment;
+
+        public BlogController(AppDbContext dbContext, IWebHostEnvironment webHostEnvironment)
         {
             _dbContext = dbContext;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         public async Task<ActionResult> Index(int page = 1)
@@ -51,15 +56,45 @@ namespace FirstFiorellaMVC.Areas.AdminPanel.Controllers
         {
             if (!ModelState.IsValid)
             {
+                //return View();
+            }
+
+            #region Upload Image, Validation
+
+            var isImageType = blog.Photo.ContentType.Contains("image");
+            if (!isImageType)
+            {
+                ModelState.AddModelError("Photo", "uploaded file must be an image");
                 return View();
             }
 
-            var isBlog = await _dbContext.Blogs.AnyAsync(x => x.Name.ToLower() == blog.Name.ToLower());
-            if (isBlog)
+            var isImageSize = blog.Photo.Length;
+            if (isImageSize > 1024 * 1000)
+            {
+                ModelState.AddModelError("Photo", "uploaded file must be max 1MB");
+                return View();
+            }
+
+            var webRootPath = _webHostEnvironment.WebRootPath;
+
+            var fileName = $"{Guid.NewGuid()}-{blog.Photo.FileName}";
+
+            var path = Path.Combine(webRootPath, "img", fileName);
+
+            var fileStream = new FileStream(path, FileMode.CreateNew);
+
+            await blog.Photo.CopyToAsync(fileStream);
+
+            #endregion
+
+            var isBlogName = await _dbContext.Blogs.AnyAsync(x => x.Name.ToLower() == blog.Name.ToLower());
+            if (isBlogName)
             {
                 ModelState.AddModelError("Name", "Already exist this blog");
                 return View();
             }
+
+            blog.Image = fileName;
 
             await _dbContext.Blogs.AddAsync(blog);
             await _dbContext.SaveChangesAsync();

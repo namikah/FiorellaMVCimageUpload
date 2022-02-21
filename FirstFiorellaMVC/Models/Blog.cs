@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.IO;
 
 namespace FirstFiorellaMVC.Models
@@ -15,11 +16,12 @@ namespace FirstFiorellaMVC.Models
         [Required(ErrorMessage = "Context Cannot be empty"), MaxLength(150)]
         public string Context { get; set; }
 
-        [Required(ErrorMessage = "Image Cannot be empty"), MaxLength(50)]
+        [Required(ErrorMessage = "Image Cannot be empty")]
         public string Image { get; set; }
 
-        //[Required(ErrorMessage = "Please upload image.")]
-        //public IFormFile Photo { get; set; }
+        [NotMapped]
+        [Required(ErrorMessage = "Please upload image.")]
+        public IFormFile Photo { get; set; }
 
         public DateTime Datetime { get; set; }
 
