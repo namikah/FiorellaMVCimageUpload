@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 
@@ -17,6 +18,8 @@ namespace FirstFiorellaMVC.Models
         [Required(ErrorMessage = "Image Cannot be empty"), MaxLength(50)]
         public string Image { get; set; }
 
+        //[Required(ErrorMessage = "Please upload image.")]
+        //public IFormFile Photo { get; set; }
 
         public DateTime Datetime { get; set; }
 
