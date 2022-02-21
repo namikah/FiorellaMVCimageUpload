@@ -113,21 +113,49 @@ namespace FirstFiorellaMVC.Areas.AdminPanel.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Blog blog)
+        public async Task<IActionResult> Edit(int? id, Blog blog)
         {
             if (!ModelState.IsValid)
             {
                 return View();
             }
 
-            var isExistBlog = await _dbContext.Blogs.FindAsync(blog.Id);
+            #region Upload Image, Validation
+
+            var isImageType = blog.Photo.ContentType.Contains("image");
+            if (!isImageType)
+            {
+                ModelState.AddModelError("Photo", "uploaded file must be an image");
+                return View();
+            }
+
+            var isImageSize = blog.Photo.Length;
+            if (isImageSize > 1024 * 1000)
+            {
+                ModelState.AddModelError("Photo", "uploaded file must be max 1MB");
+                return View();
+            }
+
+            var webRootPath = _webHostEnvironment.WebRootPath;
+
+            var fileName = $"{Guid.NewGuid()}-{blog.Photo.FileName}";
+
+            var path = Path.Combine(webRootPath, "img", fileName);
+
+            var fileStream = new FileStream(path, FileMode.CreateNew);
+
+            await blog.Photo.CopyToAsync(fileStream);
+
+            #endregion
+
+            var isExistBlog = await _dbContext.Blogs.FindAsync(id);
             if (isExistBlog == null)
             {
                 ModelState.AddModelError("Name", "Not found");
                 return View(isExistBlog);
             }
 
-            var isExistBlogName = await _dbContext.Blogs.Where(x=>x.Id != blog.Id).AnyAsync(x => x.Name == blog.Name);
+            var isExistBlogName = await _dbContext.Blogs.Where(x=>x.Id != id).AnyAsync(x => x.Name == blog.Name);
             if (isExistBlogName)
             {
                 ModelState.AddModelError("Name", "Blog name already exist");
@@ -137,7 +165,7 @@ namespace FirstFiorellaMVC.Areas.AdminPanel.Controllers
             isExistBlog.Description = blog.Description;
             isExistBlog.Datetime = blog.Datetime;
             isExistBlog.Context = blog.Context;
-            isExistBlog.Image = blog.Image;
+            isExistBlog.Image = fileName;
 
             await _dbContext.SaveChangesAsync();
 
