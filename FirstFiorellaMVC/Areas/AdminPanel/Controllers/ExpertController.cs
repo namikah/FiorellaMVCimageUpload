@@ -1,6 +1,7 @@
 ﻿using FirstFiorellaMVC.DataAccessLayer;
 using FirstFiorellaMVC.Models;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -28,7 +29,7 @@ namespace FirstFiorellaMVC.Areas.AdminPanel.Controllers
             ViewBag.Counts = await _dbContext.Experts.CountAsync();
             ViewBag.CurrentPage = page;
 
-            var experts = await _dbContext.Experts.Include(x=>x.Position).OrderByDescending(x => x.Id).Skip((page - 1) * 4).Take(4).ToListAsync();
+            var experts = await _dbContext.Experts.Include(x => x.Position).OrderByDescending(x => x.Id).Skip((page - 1) * 4).Take(4).ToListAsync();
 
             return View(experts);
         }
@@ -92,12 +93,80 @@ namespace FirstFiorellaMVC.Areas.AdminPanel.Controllers
 
         public async Task<IActionResult> Edit(int id)
         {
-            var expert = await _dbContext.Experts.Include(x => x.Position).FirstOrDefaultAsync(x => x.Id == id);
+            var expert = await _dbContext.Experts.Include(x=>x.Position).FirstOrDefaultAsync(x=>x.Id == id);
             if (expert == null)
                 return NotFound();
 
             return View(expert);
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int? id, Expert expert, IFormFile formFile)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View();
+            }
+
+            var isExisExpert = await _dbContext.Experts.Include(x => x.Position).FirstOrDefaultAsync(x => x.Id == id);
+            if (isExisExpert == null)
+            {
+                ModelState.AddModelError("Name", "Not found");
+                return View(isExisExpert);
+            }
+
+            if(formFile != null)
+            {
+                #region Upload Image, Validation
+
+                var isImageType = expert.Photo.ContentType.Contains("image");
+                if (!isImageType)
+                {
+                    ModelState.AddModelError("Photo", "uploaded file must be an image");
+                    return View();
+                }
+
+                var isImageSize = expert.Photo.Length;
+                if (isImageSize > 1024 * 1000)
+                {
+                    ModelState.AddModelError("Photo", "uploaded file must be max 1MB");
+                    return View();
+                }
+
+                var webRootPath = _webHostEnvironment.WebRootPath;
+
+                var fileName = $"{Guid.NewGuid()}-{expert.Photo.FileName}";
+
+                var path = Path.Combine(webRootPath, "img", fileName);
+
+                var fileStream = new FileStream(path, FileMode.CreateNew);
+
+                await expert.Photo.CopyToAsync(fileStream);
+
+                isExisExpert.Image = fileName;
+
+                #endregion
+            }
+
+            isExisExpert.Name = expert.Name;
+            isExisExpert.PositionId = expert.PositionId;
+
+            await _dbContext.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        public async Task<JsonResult> Delete(int id)
+        {
+            var expert = await _dbContext.Experts.FindAsync(id);
+            if (expert == null)
+                return Json(new { status = false });
+
+            _dbContext.Experts.Remove(expert);
+            _dbContext.SaveChanges();
+
+            return Json(new { status = true });
+        }
     }
 }

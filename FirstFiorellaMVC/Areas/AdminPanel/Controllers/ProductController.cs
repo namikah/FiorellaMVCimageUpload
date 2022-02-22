@@ -96,14 +96,14 @@ namespace FirstFiorellaMVC.Areas.AdminPanel.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Product product)
+        public async Task<IActionResult> Edit(int? id, Product product)
         {
             if (!ModelState.IsValid)
             {
                 return View();
             }
 
-            var isExistProduct = await _dbContext.Products.FindAsync(product.Id);
+            var isExistProduct = await _dbContext.Products.FindAsync(id);
             if (isExistProduct == null)
             {
                 ModelState.AddModelError("Name", "Not found");

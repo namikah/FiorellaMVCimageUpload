@@ -9,6 +9,7 @@ namespace FirstFiorellaMVC.Models
         public int Id { get; set; }
 
         [Required]
+        [StringLength(maximumLength:150)]
         public string Name { get; set; }
 
         public string Image { get; set; }
@@ -17,6 +18,7 @@ namespace FirstFiorellaMVC.Models
         [Required]
         public IFormFile Photo { get; set; }
 
+        [Required, ForeignKey("Position")]
         public int PositionId { get; set; }
 
         public Position Position { get; set; }

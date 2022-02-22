@@ -1,7 +1,64 @@
-﻿
+﻿@model Expert
 @{
     ViewData["Title"] = "Edit";
 }
 
-<h1>Edit</h1>
+<div class="container">
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-8 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Edit Expert</h4>
+                    <p class="card-description">Please fill below</p>
+                    <form class="forms-sample" method="post" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <input class="form-control" id="exampleInputUsername1" placeholder="name" asp-for="Name" value="@Model.Name">
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <a href="#" class="change-image">Change image</a>
+                        </div>
+                        <div class="form-group">
+                            <label>Positions</label>
+                            <select class="form-control form-control-sm selected-position-name" asp-for="PositionId">
+                                <option></option>
+                                @await Component.InvokeAsync("Position", Model.PositionId)
+                            </select>
+                            <span asp-validation-for="PositionId" class="text-danger"></span>
+                        </div>
+                        <button type="submit" class="btn btn-primary me-2">Submit</button>
+                        <a class="btn btn-light" asp-action="Index">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts{
+<partial name="_ValidationPartial" />
+
+<script>
+    $('.change-image').click(function(){
+
+          $(this).parent().append(`
+                              <input class="form-control" placeholder="Photo" type='file' accept="image/*">
+                              <span asp-validation-for="Photo" class="text-danger"></span>
+          `)
+          $(this).remove();
+      })
+</script>
+}
+
+
+
+
+
+
+
+
+
+
+
 
