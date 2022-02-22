@@ -35,7 +35,6 @@
                             @*category dropdown list*@
                             <label for="exampleFormControlSelect3">Category</label>
                             <select class="form-control form-control-sm selected-category-name" id="exampleFormControlSelect3" asp-for="CategoryId">
-                                <option></option>
                                 @await Component.InvokeAsync("Category")
                             </select>
                             <span asp-validation-for="CategoryId" class="text-danger"></span>

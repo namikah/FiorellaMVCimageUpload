@@ -21,7 +21,6 @@
                         <div class="form-group">
                             <label>Positions</label>
                             <select class="form-control form-control-sm selected-position-name" asp-for="PositionId">
-                                <option></option>
                                 @await Component.InvokeAsync("Position", Model.PositionId)
                             </select>
                             <span asp-validation-for="PositionId" class="text-danger"></span>
