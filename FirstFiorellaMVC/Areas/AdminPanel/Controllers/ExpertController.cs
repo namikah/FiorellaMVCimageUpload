@@ -117,42 +117,45 @@ namespace FirstFiorellaMVC.Areas.AdminPanel.Controllers
                 return View(isExistExpert);
             }
 
-
-            #region Upload Image, Validation
-            var isImageNull = expert.Photo;
-            if (isImageNull == null)
+            if (expert.Photo != null)
             {
-                ModelState.AddModelError("Photo", "nothing found");
-                return View(isExistExpert);
+                #region Upload Image, Validation
+                var isImageNull = expert.Photo;
+                if (isImageNull == null)
+                {
+                    ModelState.AddModelError("Photo", "nothing found");
+                    return View(isExistExpert);
+                }
+
+                var isImageType = expert.Photo.ContentType.Contains("image");
+                if (!isImageType)
+                {
+                    ModelState.AddModelError("Photo", "uploaded file must be an image");
+                    return View(isExistExpert);
+                }
+
+                var isImageSize = expert.Photo.Length;
+                if (isImageSize > 1024 * 1000)
+                {
+                    ModelState.AddModelError("Photo", "uploaded file must be max 1MB");
+                    return View(isExistExpert);
+                }
+
+                var webRootPath = _webHostEnvironment.WebRootPath;
+
+                var fileName = $"{Guid.NewGuid()}-{expert.Photo.FileName}";
+
+                var path = Path.Combine(webRootPath, "img", fileName);
+
+                var fileStream = new FileStream(path, FileMode.CreateNew);
+
+                await expert.Photo.CopyToAsync(fileStream);
+
+                isExistExpert.Image = fileName;
+
+                #endregion
             }
 
-            var isImageType = expert.Photo.ContentType.Contains("image");
-            if (!isImageType)
-            {
-                ModelState.AddModelError("Photo", "uploaded file must be an image");
-                return View(isExistExpert);
-            }
-
-            var isImageSize = expert.Photo.Length;
-            if (isImageSize > 1024 * 1000)
-            {
-                ModelState.AddModelError("Photo", "uploaded file must be max 1MB");
-                return View(isExistExpert);
-            }
-
-            var webRootPath = _webHostEnvironment.WebRootPath;
-
-            var fileName = $"{Guid.NewGuid()}-{expert.Photo.FileName}";
-
-            var path = Path.Combine(webRootPath, "img", fileName);
-
-            var fileStream = new FileStream(path, FileMode.CreateNew);
-
-            await expert.Photo.CopyToAsync(fileStream);
-
-            isExistExpert.Image = fileName;
-
-            #endregion
             isExistExpert.Name = expert.Name;
             isExistExpert.PositionId = expert.PositionId;
 
@@ -161,72 +164,6 @@ namespace FirstFiorellaMVC.Areas.AdminPanel.Controllers
 
             return RedirectToAction(nameof(Index));
         }
-
-
-
-
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> Edit(int? id, Expert expert, IFormFile formFile)
-        //{
-        //    //var existExpert = await _dbContext.Experts.FindAsync(id);
-        //    //if (!ModelState.IsValid)
-        //    //{
-        //    //    return View(existExpert);
-        //    //}
-
-        //    var isExisExpert = await _dbContext.Experts.Include(x => x.Position).FirstOrDefaultAsync(x => x.Id == id);
-        //    if (isExisExpert == null)
-        //    {
-        //        ModelState.AddModelError("Name", "Not found");
-        //        return View(isExisExpert);
-        //    }
-
-
-        //    #region Upload Image, Validation
-        //    var isImageNull = expert.Photo;
-        //    if (isImageNull == null)
-        //    {
-        //        ModelState.AddModelError("Photo", "nothing found");
-        //        return View(isExisExpert);
-        //    }
-
-        //    var isImageType = expert.Photo.ContentType.Contains("image");
-        //    if (!isImageType)
-        //    {
-        //        ModelState.AddModelError("Photo", "uploaded file must be an image");
-        //        return View(isExisExpert);
-        //    }
-
-        //    var isImageSize = expert.Photo.Length;
-        //    if (isImageSize > 1024 * 1000)
-        //    {
-        //        ModelState.AddModelError("Photo", "uploaded file must be max 1MB");
-        //        return View(isExisExpert);
-        //    }
-
-        //    var webRootPath = _webHostEnvironment.WebRootPath;
-
-        //    var fileName = $"{Guid.NewGuid()}-{expert.Photo.FileName}";
-
-        //    var path = Path.Combine(webRootPath, "img", fileName);
-
-        //    var fileStream = new FileStream(path, FileMode.CreateNew);
-
-        //    await expert.Photo.CopyToAsync(fileStream);
-
-        //    isExisExpert.Image = fileName;
-
-        //    #endregion
-
-
-        //    isExisExpert.Name = expert.Name;
-        //    isExisExpert.PositionId = expert.PositionId;
-
-        //    await _dbContext.SaveChangesAsync();
-
-        //    return RedirectToAction(nameof(Index));
-        //}
 
         public async Task<JsonResult> Delete(int id)
         {
